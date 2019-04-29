@@ -1,0 +1,11 @@
+*.m             text
+*.fig           binary
+*.mat           binary
+*.pdf 		binary
+*.png		binary
+*.xls		binary
+*.xlsx		binary
+*.rtf		text
+
+# Make GitHub understand that this is Matlab
+*.m linguist-language=Matlab
