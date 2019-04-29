@@ -4,7 +4,7 @@ function mousergui
 % spreadsheet 
 
 % -------------------------------------------------------------------------
-% Version 0.1, Jan 2015
+% Version 0.2, April 2019
 % (C) Harald Hentschke (University of Tübingen)
 % -------------------------------------------------------------------------
 

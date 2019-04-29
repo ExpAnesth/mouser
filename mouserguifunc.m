@@ -1,4 +1,4 @@
-function mouserguifunc(src,eventdata,job,varargin)
+function mouserguifunc(src,~,job,varargin)
 % ** function mouserguifunc(src,eventdata,job,varargin)
 % Collection of callback routines for mousergui.m
 %                         >>> INPUT VARIABLES >>>
@@ -10,7 +10,7 @@ function mouserguifunc(src,eventdata,job,varargin)
 %
 
 % -------------------------------------------------------------------------
-% Version 0.1, Jan 2015
+% Version 0.2, April 2019
 % (C) Harald Hentschke (University of Tübingen)
 % -------------------------------------------------------------------------
 
@@ -27,7 +27,6 @@ function mouserguifunc(src,eventdata,job,varargin)
 %   wp='working parameters' (like colors)
 %   sp=subplot handles
 persistent wp sp animalPar breedPair
-
 
 
 pvpmod(varargin);
@@ -51,9 +50,13 @@ while jobsToDo
       % ----- set up wp ('working' parameters)
       % --------------------------------------      
       % ~~~~~~~ display options & matlab version section
-      % which version of matlab?
+      % which version of Matlab?
       wp.mver=ver;
-      wp.mver=str2double(wp.mver(strmatch('matlab',lower({wp.mver.Name}),'exact')).Version);
+      % note that in standalone deployed code function ver may produce
+      % several entries with .Name equal to 'Matlab', so we have to opt for
+      % one
+      tmpIx=find(strcmpi('matlab',{wp.mver.Name}),1);
+      wp.mver=str2double(wp.mver(tmpIx).Version);
       % which version of mousergui?
       wp.ver=1.0;
       % handles to main window and its children
@@ -119,16 +122,17 @@ while jobsToDo
           % put into wp so that we know how many original parameters there
           % are
           wp.nOriginalPar=nPar;
-          [num,cha,d] = xlsread([wp.dataPath wp.dataFn],shIx);
+          [~,~,d] = xlsread([wp.dataPath wp.dataFn],shIx);
           % remove column headers from d
           d(1:wp.nHeaderLines,:)=[];
           % now the size of d reflects data content of the spreadsheet
           [n1,n2]=size(d);
-          % --- perform some global checks
+          % --- perform some checks
           if n2~=nPar
-            errordlg({'The data sheet contains too few or too many columns (this may be due to a ''stray cell'' inadvertently filled with a value).';...
-              'Please see template_mouser.xls or mouser_defdata.m for a definition of columns'});
-            error('see error window for a description of the problem');
+            % warn, but do not quit
+            warning(['The data sheet contains more columns than required', ...
+              ' (this may be due to a ''stray cell'' inadvertently filled with a value).', ...
+              ' If you are unsure, see template_mouser.xls or mouser_defdata.m for a definition of the columns.']);
           end
           % now transfer data to animalPar
           for g=1:nPar
@@ -242,7 +246,7 @@ while jobsToDo
           % ** now determine breeding pairs as explicitly specified in
           % terms of breeding cages:
           % - index to animals in breeding cages
-          bcIx=find(isfinite(animalPar(wp.breedCageIx).d));
+          bcIx=isfinite(animalPar(wp.breedCageIx).d);
           % - breeding cage numbers without repetitions
           bCage=unique(animalPar(wp.breedCageIx).d(bcIx));
           % - list of parent animal IDs (pairs in rows)
@@ -338,7 +342,6 @@ while jobsToDo
 
       
     case 'plot'
-      
       % each animal is represented by a filled symbol at its day of birth
       % (dob) and optionally a horizontal 'life line' extending up to its
       % last day of existence in the colony. Breeding pairs are connected
@@ -368,29 +371,29 @@ while jobsToDo
         % diamonds for unknown gender)
         mType=repmat('d',nAnimal,1);
         % males: squares
-        tmpIx=strcmpi('m',lower(animalPar(wp.sexIx).d));
+        tmpIx=strcmpi('m',animalPar(wp.sexIx).d);
         if any(tmpIx)
           mType(tmpIx)='s';
         end
         % females: circles
-        tmpIx=strcmpi('f',lower(animalPar(wp.sexIx).d));
+        tmpIx=strcmpi('f',animalPar(wp.sexIx).d);
         if any(tmpIx)
           mType(tmpIx)='o';
         end
         % -- face color (genetics; preallocate with gray for undefined status)
         mFaceColor=repmat([.7 .7 .7],nAnimal,1);
         % WT: white
-        tmpIx=strcmpi('wt',lower(animalPar(wp.genotypeIx).d));
+        tmpIx=strcmpi('wt',animalPar(wp.genotypeIx).d);
         if any(tmpIx)
           mFaceColor(tmpIx,:)=repmat([1 1 1],sum(tmpIx),1);
         end
         % hemizygotes: light green
-        tmpIx=strcmpi('he',lower(animalPar(wp.genotypeIx).d));
+        tmpIx=strcmpi('he',animalPar(wp.genotypeIx).d);
         if any(tmpIx)
           mFaceColor(tmpIx,:)=repmat([.6 1 .6],sum(tmpIx),1);
         end
         % homozygotes: green 
-        tmpIx=strcmpi('ho',lower(animalPar(wp.genotypeIx).d));
+        tmpIx=strcmpi('ho',animalPar(wp.genotypeIx).d);
         if any(tmpIx)
           mFaceColor(tmpIx,:)=repmat([.1 .7 .1],sum(tmpIx),1);
         end
@@ -447,7 +450,7 @@ while jobsToDo
           % callback: recursive call of mouserguifunc
           set(ph(g),'ButtonDownFcn',{@mouserguifunc,{'displayInfo','showAncestors'}});
           % add ID
-          th=text(mXPos(g),mYPos(g),int2str(ID(g)));
+          text(mXPos(g),mYPos(g),int2str(ID(g)));
         end
         
         nAliveBreedingPairs=0;
@@ -579,7 +582,7 @@ while jobsToDo
   jobsToDo= ~isempty(job);
 end
 
-
+% ------------------ LOCAL FUNCTIONS --------------------------------
 function [par,nRow]=cleanAnimalPar(par,delIx)
 for g=1:numel(par)
   par(g).d(delIx)=[];

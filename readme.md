@@ -6,8 +6,11 @@ is a graphical user interface for the display of mouse colony data as listed in 
 
 ### Features: 
 * reading of selectable sheet of Excel file
-* display of individual animals' ID, sex, genotype, date of birth and status (dead or alive) along time axis
-* optionally, additional display of 'life line' and matings
+* each animal is represented by a filled symbol & ID at its day of birth along a time axis
+* sex, genotype, and status (in colony, out of colony (e.g. dead)) are coded by the shape, hue and saturation of the symbols, respectively
+* optionally, additional display of a horizontal 'life line' extending up to each animal's last day of existence in the colony
+* optionally, animals forming breeding pairs are connected via straight lines meeting at mating date
+
 
 Please note that the code in this repository is not self-sufficient, you'll additionally need the following repositories:
 * etslfunc
